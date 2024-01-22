@@ -1,0 +1,58 @@
+{
+    "compatible_printers": [
+        "Sovol SV06 0.4 nozzle"
+    ],
+    "default_filament_colour": [
+        "#666666"
+    ],
+    "enable_pressure_advance": [
+        "1"
+    ],
+    "fan_cooling_layer_time": [
+        "3"
+    ],
+    "fan_min_speed": [
+        "20"
+    ],
+    "filament_flow_ratio": [
+        "0.9405"
+    ],
+    "filament_max_volumetric_speed": [
+        "22"
+    ],
+    "filament_settings_id": [
+        "PR 1.0 SV06 (PLA Meta) (Black) (Jayo)"
+    ],
+    "filament_vendor": [
+        "Jayo"
+    ],
+    "from": "User",
+    "hot_plate_temp_initial_layer": [
+        "60"
+    ],
+    "inherits": "Sovol Generic PLA",
+    "is_custom_defined": "0",
+    "name": "PR 1.0 SV06 (PLA Meta) (Black) (Jayo)",
+    "nozzle_temperature": [
+        "190"
+    ],
+    "nozzle_temperature_initial_layer": [
+        "200"
+    ],
+    "nozzle_temperature_range_high": [
+        "200"
+    ],
+    "nozzle_temperature_range_low": [
+        "180"
+    ],
+    "slow_down_layer_time": [
+        "1"
+    ],
+    "support_material_interface_fan_speed": [
+        "100"
+    ],
+    "temperature_vitrification": [
+        "100"
+    ],
+    "version": "1.0.0.0"
+}

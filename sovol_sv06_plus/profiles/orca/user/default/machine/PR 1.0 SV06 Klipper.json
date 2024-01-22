@@ -1,0 +1,104 @@
+{
+    "before_layer_change_gcode": "PRINT_END",
+    "change_filament_gcode": "M600",
+    "default_print_profile": "PR 1.0 SV06 100mms",
+    "enable_filament_ramming": "0",
+    "extruder_clearance_height_to_lid": "250",
+    "extruder_clearance_height_to_rod": "250",
+    "extruder_clearance_radius": "70",
+    "fan_kickstart": "0.3",
+    "fan_speedup_overhangs": "0",
+    "fan_speedup_time": "0.5",
+    "from": "User",
+    "gcode_flavor": "klipper",
+    "inherits": "Sovol SV06 0.4 nozzle",
+    "is_custom_defined": "0",
+    "layer_change_gcode": ";AFTER_LAYER_CHANGE\n;[layer_z]\n",
+    "machine_end_gcode": "PRINT_END",
+    "machine_max_acceleration_e": [
+        "8000"
+    ],
+    "machine_max_acceleration_extruding": [
+        "8000",
+        "1250"
+    ],
+    "machine_max_acceleration_retracting": [
+        "8000",
+        "1250"
+    ],
+    "machine_max_acceleration_x": [
+        "8000",
+        "960"
+    ],
+    "machine_max_acceleration_y": [
+        "8000",
+        "960"
+    ],
+    "machine_max_jerk_e": [
+        "30",
+        "4.5"
+    ],
+    "machine_max_jerk_x": [
+        "30",
+        "8"
+    ],
+    "machine_max_jerk_y": [
+        "30",
+        "8"
+    ],
+    "machine_max_jerk_z": [
+        "30",
+        "0.4"
+    ],
+    "machine_max_speed_e": [
+        "10",
+        "120"
+    ],
+    "machine_max_speed_x": [
+        "250",
+        "100"
+    ],
+    "machine_max_speed_y": [
+        "250",
+        "100"
+    ],
+    "machine_max_speed_z": [
+        "15",
+        "12"
+    ],
+    "machine_pause_gcode": "PAUSE\n",
+    "machine_start_gcode": "M104 S0\nM140 S0\nM117\n\nPRINT_START BED={bed_temperature_initial_layer[current_extruder]} HOTEND={first_layer_temperature[current_extruder]}\n\nPURGE_LINE",
+    "max_layer_height": [
+        "0.32"
+    ],
+    "name": "PR 1.0 SV06 Klipper",
+    "nozzle_type": "brass",
+    "print_host": "10.0.0.188",
+    "printer_settings_id": "PR 1.0 SV06 Klipper",
+    "purge_in_prime_tower": "0",
+    "retract_before_wipe": [
+        "33%"
+    ],
+    "retract_length_toolchange": [
+        "10"
+    ],
+    "retraction_length": [
+        "0.4"
+    ],
+    "retraction_minimum_travel": [
+        "2"
+    ],
+    "support_air_filtration": "0",
+    "support_chamber_temp_control": "0",
+    "thumbnails": [
+        "32x32",
+        "400x300"
+    ],
+    "version": "1.0.0.0",
+    "z_hop": [
+        "0.2"
+    ],
+    "z_hop_types": [
+        "Auto Lift"
+    ]
+}

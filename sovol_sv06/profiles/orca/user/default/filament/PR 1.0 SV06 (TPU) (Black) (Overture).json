@@ -1,0 +1,79 @@
+{
+    "compatible_printers": [
+        "Sovol SV06 0.4 nozzle"
+    ],
+    "default_filament_colour": [
+        "#333333"
+    ],
+    "enable_pressure_advance": [
+        "1"
+    ],
+    "fan_min_speed": [
+        "70"
+    ],
+    "filament_flow_ratio": [
+        "0.9702"
+    ],
+    "filament_max_volumetric_speed": [
+        "1.8"
+    ],
+    "filament_notes": [
+        "0.9702\nRetraction Speed:\n√ 20 (schranzt aber n bisschen)\n√ 15 (wohl immer noch n bisschen)\n3 Durchmesser des Bauteils ändert sich - es gibt eine Auswölbung\n10\nVolumetric flow:\n√ 1.2\n√ 1.6\n√ 1.8\n√ 2.0\n√ 2.2\n√ 2.4\n2.6 tangles\n2.4 tangles\n2.2 tangles\nGrub screw was lose!\n2.6 tangles\n√ 2.0\n√ 2.2\n2.4 tangles\nok, border is 2.4/2.6. where is it reliable over time?\n2.0 worked, but then tangled.\n1.8 tangled immediately - grub screw lose again! Tightened harder this time.\n2.0 tangles\n1.8 tangles, screw ok.\n√ 1.6 seems ok. Was the problem maybe the non-removal of the precious prime line?\n√ 1.8\n√ 2.0\n√ 2.2\n2.4 tangles. \n2.1 worked some time, then tangled.\n2.0 mostly fine, but tangled.\n1.8\n\n\n\n\n\n\n"
+    ],
+    "filament_retraction_length": [
+        "1.8"
+    ],
+    "filament_retraction_speed": [
+        "15"
+    ],
+    "filament_settings_id": [
+        "PR 1.0 SV06 (TPU) (Black) (Overture)"
+    ],
+    "filament_type": [
+        "TPU"
+    ],
+    "filament_vendor": [
+        "Overture"
+    ],
+    "from": "User",
+    "hot_plate_temp": [
+        "20"
+    ],
+    "hot_plate_temp_initial_layer": [
+        "20"
+    ],
+    "inherits": "Sovol Generic PLA",
+    "is_custom_defined": "0",
+    "name": "PR 1.0 SV06 (TPU) (Black) (Overture)",
+    "nozzle_temperature": [
+        "220"
+    ],
+    "nozzle_temperature_initial_layer": [
+        "220"
+    ],
+    "nozzle_temperature_range_high": [
+        "230"
+    ],
+    "nozzle_temperature_range_low": [
+        "210"
+    ],
+    "overhang_fan_threshold": [
+        "25%"
+    ],
+    "reduce_fan_stop_start_freq": [
+        "0"
+    ],
+    "slow_down_for_layer_cooling": [
+        "0"
+    ],
+    "slow_down_layer_time": [
+        "0"
+    ],
+    "support_material_interface_fan_speed": [
+        "100"
+    ],
+    "temperature_vitrification": [
+        "100"
+    ],
+    "version": "1.0.0.0"
+}

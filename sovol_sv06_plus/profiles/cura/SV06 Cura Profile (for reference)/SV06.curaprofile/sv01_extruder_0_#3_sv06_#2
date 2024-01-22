@@ -1,0 +1,33 @@
+[general]
+version = 4
+name = SV06 #2
+definition = fdmprinter
+
+[metadata]
+type = quality_changes
+quality_type = draft
+intent_category = default
+position = 0
+setting_version = 20
+
+[values]
+acceleration_travel = 1000
+infill_sparse_density = 15
+initial_layer_line_width_factor = 150
+jerk_print = 5
+material_print_temperature = 175
+retract_at_layer_change = True
+retraction_amount = 0.5
+retraction_hop = 0.4
+retraction_hop_enabled = True
+retraction_speed = 30
+skirt_gap = 0
+skirt_line_count = 3
+speed_print = 60
+speed_travel = 200
+speed_wall_0 = 25
+speed_wall_x = 30
+wall_line_count = 3
+wall_line_width_0 = 0.35
+zig_zaggify_infill = True
+
