@@ -156,17 +156,50 @@ Expected cost: roughly 15–25 % longer prints.
   not lost on a host rebuild.
 - Physical: shorter shielded USB cable with ferrite; try a different Pi USB port.
 
-### 4.4 Hardware items (tracked, not implemented here)
+### 4.4 Filament runout detection
+
+The sensor is already enabled in Klipper (`enabled: true`, `pause_on_runout: True`) but has
+never functioned. Current live state is `filament_detected: false` with no filament loaded,
+which confirms the **uncommitted `switch_pin: !PA4` polarity change is correct** — it just
+needs committing. No genuine runout or insert event appears anywhere in the logs.
+
+Four defects to close:
+
+1. **Dead control variable.** `variable_filament_sensor_enabled: 0` in `_globals`
+   (`macros.cfg:6`) is referenced nowhere in the config tree. It reads like an on/off switch
+   and is not one. Remove it; `SET_FILAMENT_SENSOR` plus the sensor's own `enabled` state is
+   the real control.
+
+2. **Commit the polarity fix.** `switch_pin: PA4` → `!PA4`, currently uncommitted.
+
+3. **Cold-nozzle trap on runout.** `PAUSE` deliberately issues `M104 S0` so filament isn't
+   cooked during a long pause — correct in itself. But it means that when you return to a
+   runout pause, the hotend is cold, and `LOAD_FILAMENT` extrudes immediately with no
+   temperature check. Klipper refuses extrusion below `min_extrude_temp` (default 170 °C),
+   so the macro errors out at exactly the moment the user needs it.
+   Fix in `LOAD_FILAMENT` / `UNLOAD_FILAMENT`: if the hotend is below the extrude minimum,
+   heat to the saved `etemp` (falling back to a sane default) and wait, before extruding.
+   This preserves `PAUSE`'s cooling behaviour rather than undoing it.
+
+4. **No guard against starting a print with no filament.** A switch sensor only fires on the
+   *transition* to not-detected during a print. Starting with an empty path produces no
+   trigger and therefore no protection. Add a check at the top of `PRINT_START` that aborts
+   the print if `filament_detected` is false.
+
+**Risk:** enabling a sensor that genuinely works introduces a new failure mode — false
+runout triggers mid-print from a marginal switch or noisy wiring. Validation below requires
+confirming *both* states before this is trusted on a long print.
+
+### 4.5 Hardware items (tracked, not implemented here)
 
 1. **Rewire the mainboard fan to constant 24 V.** Given the fan-off-for-two-layers
    constraint, this is the only complete fix for §1.1; everything in §4.1 buys margin.
 2. **Replace the Pi power supply** with an official 5 V/3 A unit (§1.4).
 
-### 4.5 Repo hygiene
+### 4.6 Repo hygiene
 
 - Remove committed `.DS_Store` files (repo root, `klipper/`, `klipper/modules/`) and add to
   `.gitignore`.
-- Commit or revert the pending modification to `modules/functions/filament_sensor.cfg`.
 - Add a header comment to each profile stating its real measured limits.
 - Tighten `[verify_heater extruder]` in `options.cfg` — `max_error: 200` with
   `hysteresis: 5` is loose enough to mask genuine heater faults.
@@ -191,6 +224,14 @@ Changes are only accepted if all of the following hold:
 5. **Link stability:** no `Lost communication with MCU` across at least three prints
    totalling 10+ hours.
 6. **Power:** `vcgencmd get_throttled` reads `0x0` after a fresh boot plus one full print.
+7. **Filament sensor, both states proven:** with filament loaded through the sensor,
+   `filament_detected` reads `true`; with it removed, `false`. Confirming only one state is
+   insufficient — that is how the current broken configuration went unnoticed.
+8. **Runout recovery works end to end:** mid-print, pull the filament. The print pauses and
+   parks; `LOAD_FILAMENT` succeeds from the cold paused state without a manual `M109`;
+   `RESUME` reheats and continues with no visible layer defect.
+9. **Empty-start guard:** starting a print with no filament loaded aborts in `PRINT_START`
+   rather than air-printing.
 
 ## 6. Rollback
 
