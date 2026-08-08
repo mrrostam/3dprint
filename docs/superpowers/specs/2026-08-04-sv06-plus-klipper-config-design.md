@@ -233,38 +233,45 @@ exceeds the table above. Relaxing to `samples: 2` and `samples_tolerance: 0.025`
 time substantially *without* sacrificing mesh density. Left out of scope — flagged so the
 choice is deliberate.
 
-### 4.6 First layer: uncalibrated axis twist compensation
+### 4.6 First layer quality
 
-`[axis_twist_compensation]` is included and active but has **never been calibrated**. Live
-state is `{}`, and `printer.cfg` contains no saved `[axis_twist_compensation]` block. The
-module is inert.
+**Observed symptom: the defect is uniform across the entire bed**, not localised to one side
+or to the edges (user report).
 
-This is a candidate root cause for first-layer defects. Every row of the saved `SV06_mesh`
-slopes the same direction across X — row 1 runs `+0.033` at X=27 to `−0.127` at X=299, a
-0.16 mm drop, repeated across all 15 rows. That is the signature of X-gantry twist, where the
-probe tilts relative to the nozzle across X and therefore reports a slope the nozzle does not
-experience.
+**Axis twist is ruled out and deliberately deferred.** `[axis_twist_compensation]` is included
+and active but has never been calibrated — live state is `{}` and `printer.cfg` holds no saved
+block, so the module is inert. It was initially suspected because every row of `SV06_mesh`
+slopes the same way across X (`+0.033` at X=27 to `−0.127` at X=299, repeated across all 15
+rows), which is the signature of probe-vs-nozzle disagreement.
 
-**If that slope is probe error rather than bed shape, the mesh is actively harming the first
-layer** — raising the nozzle at one end of X and lowering it at the other, producing gaps at
-one side and over-squish at the other simultaneously.
+That hypothesis is **refuted by the symptom being uniform**. Gantry twist is asymmetric by
+construction: it raises the nozzle at one X extreme and lowers it at the other, so it produces
+gaps on one side and over-squish on the other — never a uniform defect. Running
+`AXIS_TWIST_COMPENSATION_CALIBRATE` is therefore **omitted from this work at user direction**,
+and the 0.16 mm slope in the mesh is taken to be genuine bed shape, which the mesh already
+compensates.
 
-**This is a hypothesis, not a confirmed finding.** It is consistent with the mesh data but has
-not been verified against a physical part. Resolve before acting, via
-`AXIS_TWIST_COMPENSATION_CALIBRATE` (bed preheated — twist varies with gantry temperature).
-Decision rule on the resulting `z_compensations` spread: `> 0.05 mm` confirms it and the
-calibration is itself the fix; `< 0.02 mm` refutes it and the slope is genuine bed shape.
+**Actual causes, consistent with a uniform defect:**
 
-**Ordering constraint:** calibrating twist changes probe results, which makes the saved
-`default` and `SV06_mesh` profiles stale. They must be re-probed afterwards, or an old mesh
-gets applied on top of a corrected probe.
+1. **Z-offset.** Currently `2.571`. A uniform first-layer defect across a bed whose mesh is
+   already compensating for shape points at the global nozzle-to-bed distance.
+2. **Under-extrusion.** `filament_flow_ratio = 0.92` is ~8 % below nominal.
+3. **First layer lines narrower than the rest.** `initial_layer_line_width = 0.42` against
+   `line_width = 0.44`. Convention is the reverse — a wider first layer aids adhesion and
+   closes inter-line gaps.
 
-**Secondary first-layer contributors** (relevant only if twist is refuted):
-`filament_flow_ratio = 0.92` is ~8 % under-extrusion, and `initial_layer_line_width = 0.42`
-is narrower than `line_width = 0.44`. Thin lines plus reduced flow predisposes to gaps
-between adjacent first-layer extrusions. Both are slicer-side and per §3 out of scope, but
-recorded so they are not rediscovered later. `initial_layer_speed = 40` mm/s is conservative
-and is ruled out as a cause.
+(2) and (3) compound: reduced flow through narrower lines leaves adjacent first-layer
+extrusions short of touching. Both are slicer-side, and §3 places slicer profiles out of
+scope, so they are recorded as findings for the user to apply rather than as config work.
+
+**Ruled out:** `initial_layer_speed = 40` mm/s is conservative and is not a contributor.
+
+**Resolution method.** Z-offset direction is not determined from the data — gaps and
+over-squish are opposite faults requiring opposite corrections — so it is tuned live rather
+than guessed. During a first-layer test print, apply `SET_GCODE_OFFSET Z_ADJUST=±0.02 MOVE=1`
+until the lines just merge, then fold the net adjustment into `probe z_offset` as
+`new = 2.571 − (net Z_ADJUST)`. Sign relationship: a positive `Z_ADJUST` raises the nozzle
+and is equivalent to *decreasing* `z_offset`.
 
 ### 4.7 Hardware items (tracked, not implemented here)
 
