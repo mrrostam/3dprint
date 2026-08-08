@@ -233,13 +233,46 @@ exceeds the table above. Relaxing to `samples: 2` and `samples_tolerance: 0.025`
 time substantially *without* sacrificing mesh density. Left out of scope — flagged so the
 choice is deliberate.
 
-### 4.6 Hardware items (tracked, not implemented here)
+### 4.6 First layer: uncalibrated axis twist compensation
+
+`[axis_twist_compensation]` is included and active but has **never been calibrated**. Live
+state is `{}`, and `printer.cfg` contains no saved `[axis_twist_compensation]` block. The
+module is inert.
+
+This is a candidate root cause for first-layer defects. Every row of the saved `SV06_mesh`
+slopes the same direction across X — row 1 runs `+0.033` at X=27 to `−0.127` at X=299, a
+0.16 mm drop, repeated across all 15 rows. That is the signature of X-gantry twist, where the
+probe tilts relative to the nozzle across X and therefore reports a slope the nozzle does not
+experience.
+
+**If that slope is probe error rather than bed shape, the mesh is actively harming the first
+layer** — raising the nozzle at one end of X and lowering it at the other, producing gaps at
+one side and over-squish at the other simultaneously.
+
+**This is a hypothesis, not a confirmed finding.** It is consistent with the mesh data but has
+not been verified against a physical part. Resolve before acting, via
+`AXIS_TWIST_COMPENSATION_CALIBRATE` (bed preheated — twist varies with gantry temperature).
+Decision rule on the resulting `z_compensations` spread: `> 0.05 mm` confirms it and the
+calibration is itself the fix; `< 0.02 mm` refutes it and the slope is genuine bed shape.
+
+**Ordering constraint:** calibrating twist changes probe results, which makes the saved
+`default` and `SV06_mesh` profiles stale. They must be re-probed afterwards, or an old mesh
+gets applied on top of a corrected probe.
+
+**Secondary first-layer contributors** (relevant only if twist is refuted):
+`filament_flow_ratio = 0.92` is ~8 % under-extrusion, and `initial_layer_line_width = 0.42`
+is narrower than `line_width = 0.44`. Thin lines plus reduced flow predisposes to gaps
+between adjacent first-layer extrusions. Both are slicer-side and per §3 out of scope, but
+recorded so they are not rediscovered later. `initial_layer_speed = 40` mm/s is conservative
+and is ruled out as a cause.
+
+### 4.7 Hardware items (tracked, not implemented here)
 
 1. **Rewire the mainboard fan to constant 24 V.** Given the fan-off-for-two-layers
    constraint, this is the only complete fix for §1.1; everything in §4.1 buys margin.
 2. **Replace the Pi power supply** with an official 5 V/3 A unit (§1.4).
 
-### 4.7 Repo hygiene
+### 4.8 Repo hygiene
 
 - Remove committed `.DS_Store` files (repo root, `klipper/`, `klipper/modules/`) and add to
   `.gitignore`.
