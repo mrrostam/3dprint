@@ -192,39 +192,39 @@ confirming *both* states before this is trusted on a long print.
 
 ### 4.5 Bed mesh density
 
-Change `[bed_mesh] probe_count` in `options.cfg` from `15, 15` to `4, 4`.
+Change `[bed_mesh] probe_count` in `options.cfg` from `15, 15` to `9, 9`.
 
-**How this propagates.** `probe_count` is not a fixed point count — KAMP's
+**How this propagates.** `probe_count` is not a fixed point count — the KAMP
 `BED_MESH_CALIBRATE` override treats it as a *density reference and upper cap*:
 
 ```
 max_probe_point_distance_x = (mesh_max[0] - mesh_min[0]) / (probe_count[0] - 1)
 ```
 
-At `15,15` that is 19.4 mm spacing; at `4,4` it becomes 90.7 mm. KAMP then sizes the mesh to
+At `15,15` that is 19.4 mm spacing; at `9,9` it becomes 34.0 mm. KAMP then sizes the mesh to
 the print area at that spacing and clamps to `probe_count`.
 
-Worked against the failed print's area (`AREA_START=28.7552,50.4902 AREA_END=271.245,249.509`):
+Worked against the failed print's area (`AREA_START=28.7552,50.4902 AREA_END=271.245,249.509`,
+`mesh_margin: 5`):
 
-| `probe_count` | KAMP-computed grid | Points | Probes at `samples: 3` |
-|---|---|---|---|
-| `15, 15` (current) | 14 × 12 | 168 | 504 |
-| `4, 4` (proposed) | 4 × 4 | 16 | 48 |
+| `probe_count` | Spacing | KAMP-computed grid | Points | Probes at `samples: 3` | Algorithm |
+|---|---|---|---|---|---|
+| `15, 15` (current) | 19.4 mm | 14 × 12 | 168 | 504 | bicubic |
+| `9, 9` (proposed) | 34.0 mm | 9 × 8 | 72 | 216 | bicubic |
 
 The 14 × 12 figure is corroborated by the saved `[bed_mesh default]` profile in `printer.cfg`,
-which is exactly `x_count = 14, y_count = 12`.
+which is exactly `x_count = 14, y_count = 12` — confirming the model above reproduces what
+KAMP actually does.
 
-**Side effect to be aware of:** KAMP picks the interpolation algorithm from the point count —
-bicubic above 6 points per axis, lagrange at or below. At `4,4` every adaptive mesh becomes
-**lagrange**, and the `algorithm: bicubic` line in `[bed_mesh]` becomes dead except on the
-fallback path. This is valid (Klipper's lagrange is capped at 6 points/axis anyway) but it
-means the configured algorithm no longer describes what actually runs.
+**`9,9` keeps bicubic.** KAMP selects the interpolation algorithm from the point count:
+bicubic above 6 points per axis, lagrange at or below. The computed grid is 9 × 8, so the
+maximum is 9 and bicubic is retained. The `algorithm: bicubic` line in `[bed_mesh]` continues
+to describe what actually runs. (At `4,4` it would have silently become lagrange.)
 
-**Concern, recorded but not blocking.** On a 300 × 300 bed, 90 mm spacing is coarse. The
-existing 15 × 15 probe data spans roughly −0.14 mm to +0.06 mm with real local structure —
-single rows swing ~0.16 mm across X. A 4-point grid cannot represent that, so first-layer
-compensation will get worse. Requested explicitly and implemented as asked; if first layers
-degrade, `5,5` or `6,6` is the natural fallback and stays on lagrange.
+**Assessment.** 34 mm spacing resolves the local structure visible in the existing 15 × 15
+probe data — rows swing ~0.16 mm across X over roughly 40–60 mm features — while cutting
+probe work to about 43 % of current. This is a reasonable trade rather than a compromise, and
+supersedes the density concern that applied at `4,4`.
 
 **Note on where the time actually goes.** Probe *count* is only one factor. `[probe]` is set
 to `samples: 3` with `samples_tolerance: 0.01` and `samples_tolerance_retries: 5`. A 0.01 mm
@@ -275,10 +275,10 @@ Changes are only accepted if all of the following hold:
    `RESUME` reheats and continues with no visible layer defect.
 9. **Empty-start guard:** starting a print with no filament loaded aborts in `PRINT_START`
    rather than air-printing.
-10. **Bed mesh:** a print with `AREA_START`/`AREA_END` produces a 4 × 4 lagrange mesh (visible
-    in the KAMP verbose output and the Fluidd mesh view), and the resulting first layer is
-    inspected against a known-good reference before this is accepted. Per §4.5 this is the
-    change most likely to degrade output rather than improve it.
+10. **Bed mesh:** a full-bed print produces a 9 × 8 **bicubic** mesh — confirm in the KAMP
+    verbose output that the algorithm is bicubic, not lagrange. A silent fall to lagrange
+    means the computed grid came out at 6 or fewer points per axis and the density is lower
+    than intended. First layer inspected against a known-good reference.
 
 ## 6. Rollback
 
