@@ -190,13 +190,56 @@ Four defects to close:
 runout triggers mid-print from a marginal switch or noisy wiring. Validation below requires
 confirming *both* states before this is trusted on a long print.
 
-### 4.5 Hardware items (tracked, not implemented here)
+### 4.5 Bed mesh density
+
+Change `[bed_mesh] probe_count` in `options.cfg` from `15, 15` to `4, 4`.
+
+**How this propagates.** `probe_count` is not a fixed point count — KAMP's
+`BED_MESH_CALIBRATE` override treats it as a *density reference and upper cap*:
+
+```
+max_probe_point_distance_x = (mesh_max[0] - mesh_min[0]) / (probe_count[0] - 1)
+```
+
+At `15,15` that is 19.4 mm spacing; at `4,4` it becomes 90.7 mm. KAMP then sizes the mesh to
+the print area at that spacing and clamps to `probe_count`.
+
+Worked against the failed print's area (`AREA_START=28.7552,50.4902 AREA_END=271.245,249.509`):
+
+| `probe_count` | KAMP-computed grid | Points | Probes at `samples: 3` |
+|---|---|---|---|
+| `15, 15` (current) | 14 × 12 | 168 | 504 |
+| `4, 4` (proposed) | 4 × 4 | 16 | 48 |
+
+The 14 × 12 figure is corroborated by the saved `[bed_mesh default]` profile in `printer.cfg`,
+which is exactly `x_count = 14, y_count = 12`.
+
+**Side effect to be aware of:** KAMP picks the interpolation algorithm from the point count —
+bicubic above 6 points per axis, lagrange at or below. At `4,4` every adaptive mesh becomes
+**lagrange**, and the `algorithm: bicubic` line in `[bed_mesh]` becomes dead except on the
+fallback path. This is valid (Klipper's lagrange is capped at 6 points/axis anyway) but it
+means the configured algorithm no longer describes what actually runs.
+
+**Concern, recorded but not blocking.** On a 300 × 300 bed, 90 mm spacing is coarse. The
+existing 15 × 15 probe data spans roughly −0.14 mm to +0.06 mm with real local structure —
+single rows swing ~0.16 mm across X. A 4-point grid cannot represent that, so first-layer
+compensation will get worse. Requested explicitly and implemented as asked; if first layers
+degrade, `5,5` or `6,6` is the natural fallback and stays on lagrange.
+
+**Note on where the time actually goes.** Probe *count* is only one factor. `[probe]` is set
+to `samples: 3` with `samples_tolerance: 0.01` and `samples_tolerance_retries: 5`. A 0.01 mm
+agreement requirement across three samples triggers frequent retries, so real probe time
+exceeds the table above. Relaxing to `samples: 2` and `samples_tolerance: 0.025` would cut
+time substantially *without* sacrificing mesh density. Left out of scope — flagged so the
+choice is deliberate.
+
+### 4.6 Hardware items (tracked, not implemented here)
 
 1. **Rewire the mainboard fan to constant 24 V.** Given the fan-off-for-two-layers
    constraint, this is the only complete fix for §1.1; everything in §4.1 buys margin.
 2. **Replace the Pi power supply** with an official 5 V/3 A unit (§1.4).
 
-### 4.6 Repo hygiene
+### 4.7 Repo hygiene
 
 - Remove committed `.DS_Store` files (repo root, `klipper/`, `klipper/modules/`) and add to
   `.gitignore`.
@@ -232,6 +275,10 @@ Changes are only accepted if all of the following hold:
    `RESUME` reheats and continues with no visible layer defect.
 9. **Empty-start guard:** starting a print with no filament loaded aborts in `PRINT_START`
    rather than air-printing.
+10. **Bed mesh:** a print with `AREA_START`/`AREA_END` produces a 4 × 4 lagrange mesh (visible
+    in the KAMP verbose output and the Fluidd mesh view), and the resulting first layer is
+    inspected against a known-good reference before this is accepted. Per §4.5 this is the
+    change most likely to degrade output rather than improve it.
 
 ## 6. Rollback
 
